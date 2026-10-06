@@ -979,7 +979,9 @@ BL2_SOURCES += ${ECNT_PLAT}/common/drivers/ddr_cal/en7523/hal_io.c \
 	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_pi_basic_api.c \
 	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_pi_calibration_api.c \
 	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_pi_main.c \
-	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc.c
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc.c \
+	${ECNT_PLAT}/common/drivers/efuse/$(EFUSE_DRIVER) \
+	${ECNT_PLAT}/common/drivers/efuse_load/en7523/efuse_load.c
 BL2_SOURCES := $(sort $(BL2_SOURCES))
 endif
 
