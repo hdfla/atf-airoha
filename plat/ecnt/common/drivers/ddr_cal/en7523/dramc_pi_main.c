@@ -294,7 +294,7 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
         vSetRank(p, s1RankIdx);
 
 		mcSHOW_DBG_MSG(("Rank.%d start calibration.\n", s1RankIdx));
-		#if dbg_print
+		#if 1
 		prom_puts("Rank");
 		prom_print_dec(s1RankIdx);
 		prom_puts(" start calibration.\n");
@@ -318,13 +318,13 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
 			#endif
                 {
 					mcSHOW_DBG_MSG(("##timeinfo: WriteLeveling begin...\n"));
-					#if	dbg_print
+					#if 1
 					prom_puts("##timeinfo: WriteLeveling begin...\n");
 					#endif
 					timestamp_show();
                     DramcWriteLeveling((DRAMC_CTX_T *) p);//Dram will be reset when finish write leveling                    
 					mcSHOW_DBG_MSG(("##timeinfo: WriteLeveling end\n"));
-					#if	dbg_print
+					#if 1
 					prom_puts("##timeinfo: WriteLeveling end\n");
 					#endif
 					timestamp_show();
@@ -345,7 +345,7 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
 
 	
 		mcSHOW_DBG_MSG(("##timeinfo: RxDqsGating begin...\n"));
-		#if	dbg_print
+		#if 1
 		prom_puts("##timeinfo: RxDqsGating begin...\n");
 		#endif
 		timestamp_show();
@@ -359,7 +359,7 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
 		#endif
 		}
 		mcSHOW_DBG_MSG(("##timeinfo: RxDqsGating end\n"));
-		#if	dbg_print
+		#if 1
 		prom_puts("##timeinfo: RxDqsGating end\n");
 		#endif
 		timestamp_show();
@@ -399,13 +399,13 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
     #endif
         {
         	mcSHOW_DBG_MSG(("##timeinfo: RxWindowPerbit begin...\n"));
-			#if	dbg_print
+			#if 1
 			prom_puts("##timeinfo: RxWindowPerbit begin...\n");
 			#endif
 			timestamp_show();
             DramcRxWindowPerbitCal((DRAMC_CTX_T *) p, 1);
         	mcSHOW_DBG_MSG(("##timeinfo: RxWindowPerbit end\n"));
-			#if	dbg_print
+			#if 1
 			prom_puts("##timeinfo: RxWindowPerbit end\n");
 			#endif
 			timestamp_show();
@@ -418,13 +418,13 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
         }
 
 	mcSHOW_DBG_MSG(("##timeinfo: RxDatLat begin...\n"));
-	#if	dbg_print
+	#if 1
 	prom_puts("##timeinfo: RxDatLat begin...\n");
 	#endif
 	timestamp_show();
 	DramcRxdatlatCal((DRAMC_CTX_T *) p);
 	mcSHOW_DBG_MSG(("##timeinfo: RxDatLat end\n"));
-	#if	dbg_print
+	#if 1
 	prom_puts("##timeinfo: RxDatLat end\n");
 	#endif
 	timestamp_show();
@@ -436,13 +436,13 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
     #endif
         {      
 			mcSHOW_DBG_MSG(("##timeinfo: TxWindowPerbit begin...\n"));
-			#if	dbg_print
+			#if 1
 			prom_puts("##timeinfo: TxWindowPerbit begin...\n");
 			#endif
 			timestamp_show();
             DramcTxWindowPerbitCal((DRAMC_CTX_T *) p, TX_DQ_DQS_MOVE_DQ_DQM);
 			mcSHOW_DBG_MSG(("##timeinfo: TxWindowPerbit end\n"));
-			#if	dbg_print
+			#if 1
 			prom_puts("##timeinfo: TxWindowPerbit end\n");
 			#endif
 			timestamp_show();
@@ -478,7 +478,7 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
 	int i;
 
 	mcSHOW_DBG_MSG(("Channel A RX eye scan.\n\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("Channel A RX eye scan.\n\n");
 	#endif
 	DramcRxEyeScanInit(p);
@@ -499,7 +499,7 @@ static void vCalibration_Flow_DDR(DRAMC_CTX_T *p)
 	DramcTxEyeScanInit(p);
 
 	mcSHOW_DBG_MSG(("Channel A TX eye scan.\n\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("Channel A TX eye scan.\n\n");
 	#endif
 	{		
@@ -901,48 +901,48 @@ void DPI_SW_main_PCDDR3(void)
     Global_Option_Init(p);
 
     mcSHOW_DBG_MSG(("##timeinfo: Impedance Calibration begin...\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: Impedance Calibration begin...\n");
 	#endif
 	timestamp_show();
 	DramcSwImpedanceCal(p); //cc moved here	
 	mcSHOW_DBG_MSG(("##timeinfo: Impedance Calibration end\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: Impedance Calibration end\n");
 	#endif
 	timestamp_show();
 
 	mcSHOW_DBG_MSG(("##timeinfo: DramcInit begin...\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: DramcInit begin...\n");
 	#endif
 	timestamp_show();
     DramcInit((DRAMC_CTX_T *) p);
 	timestamp_show();
 	mcSHOW_DBG_MSG(("##timeinfo: DramcInit end\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: DramcInit end\n");
 	#endif
 #if 1
 #if ENABLE_MIOCK_JMETER //cc add for Jitter meter function test
 	mcSHOW_DBG_MSG(("##timeinfo: Impedance Calibration begin...\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: MIOCK JMETER begin...\n");
 	#endif
 	timestamp_show();
 	//DramcMiockJmeter(p);
 	DramcMiockJmeter_CLK(p);
 	mcSHOW_DBG_MSG(("##timeinfo: Impedance Calibration end...\n"));
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: MIOCK JMETER end...\n");
 	#endif
 	timestamp_show();
 #endif
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: ApplyConfigBeforeCalibration begin...\n");
 	#endif
     vApplyConfigBeforeCalibration((DRAMC_CTX_T *) p);
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: ApplyConfigBeforeCalibration end...\n");
 	#endif
     vDramCalibrationAllChannel(p);
@@ -983,11 +983,11 @@ void DPI_SW_main_PCDDR3(void)
         vDramcACTimingOptimize(p);
     }
 #endif
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: ApplyConfigAfterCalibration begin...\n");
 	#endif
     vApplyConfigAfterCalibration(p);
-	#if dbg_print
+	#if 1
 	prom_puts("##timeinfo: ApplyConfigAfterCalibration end...\n");
 	#endif
 
