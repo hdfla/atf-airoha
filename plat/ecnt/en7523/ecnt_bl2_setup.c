@@ -377,10 +377,15 @@ void bl2_plat_preload_setup(void)
 
 #if !defined(IMAGE_BL21) && !defined(IMAGE_BL22)
 
+	NOTICE("TRACE: before image_decompress_init\n");
 	image_decompress_init(EN7523_IMAGE_BUF_OFFSET, EN7523_IMAGE_BUF_SIZE, lzmaBuffToBuffDecompress);
+	NOTICE("TRACE: after image_decompress_init\n");
 
+	NOTICE("TRACE: before bl2_platform_setup\n");
 	bl2_platform_setup();
+	NOTICE("TRACE: after bl2_platform_setup\n");
 
+	NOTICE("TRACE: before plat_get_dual_boot\n");
 	if (plat_get_dual_boot())
 	{
 		fip_offset += PLAT_ECNT_MULTI_BOOT_SIZE;
@@ -404,6 +409,15 @@ void bl2_plat_preload_setup(void)
 			if ((flash_read_status == FLASH_READ_STATUS_INCORRECT) ||
 			     (flash_read_status == FLASH_READ_STATUS_CORRECT && plat_check_bypass() != BYPASS_FWUPGRADE))
 			{
+				printf("TRACE: PLAT_ECNT_FIP_BASE=0x%x\n", (unsigned int)PLAT_ECNT_FIP_BASE);
+				{
+					int __i;
+					printf("TRACE: buffer BEFORE receive:");
+					for (__i = 0; __i < 16; __i++) {
+						printf(" %x", (unsigned int)((uint8_t *)PLAT_ECNT_FIP_BASE)[__i]);
+					}
+					printf("\n");
+				}
 				printf("Press x to load BL31 + U-Boot FIP\n");
 				while (len == 0)
 				{
@@ -411,9 +425,38 @@ void bl2_plat_preload_setup(void)
 					{
 						// len = XModemReceive(&console, fwu_img_len,
 						// 		    (uint8_t *) (PLAT_ECNT_FIP_BASE - PLAT_ECNT_MV_DATA_SIZE));
+						NOTICE("TRACE: calling XModemReceive\n");
 						len = XModemReceive(&console, PLAT_ECNT_FIP_MAX_SIZE,
 								    (uint8_t *) PLAT_ECNT_FIP_BASE);
+						NOTICE("TRACE: XModemReceive returned len=%d\n", len);
+						/* TEST-ONLY: the received DRAM destination showed
+						 * a suspicious nibble-corruption pattern on the
+						 * first large (>500KB) transfer into DRAM (the
+						 * only working transfer so far landed in SRAM via
+						 * BL1's own loader, a completely different path).
+						 * Flush/invalidate in case stale or partially
+						 * written cache lines are being read back instead
+						 * of what was actually stored to DRAM. */
+						if (len > 0) {
+							flush_dcache_range((uintptr_t)PLAT_ECNT_FIP_BASE, (size_t)len);
+							inv_dcache_range((uintptr_t)PLAT_ECNT_FIP_BASE, (size_t)len);
+							NOTICE("TRACE: cache flush+invalidate done\n");
+						}
 					}
+				}
+				{
+					/* Dump bytes one at a time, ONE %x arg per call --
+					 * the multi-arg NOTICE() with 8 %02x last round
+					 * printed garbled digits (a nibble-zeroing pattern
+					 * consistent with the vendor's minimal printf
+					 * choking on many varargs), not necessarily real
+					 * memory corruption. */
+					int __i;
+					printf("TRACE: FIP header+serial bytes:");
+					for (__i = 0; __i < 16; __i++) {
+						printf(" %x", (unsigned int)((uint8_t *)PLAT_ECNT_FIP_BASE)[__i]);
+					}
+					printf("\n");
 				}
 
 // #if defined(TCSUPPORT_TPL_SUPPORT)
@@ -468,6 +511,8 @@ void bl2_plat_preload_setup(void)
 		}
 	}
 
+	NOTICE("TRACE: before plat_check_header, result=%d\n",
+		plat_check_header((uint8_t *) PLAT_ECNT_FIP_BASE));
 	while (plat_check_header((uint8_t *) PLAT_ECNT_FIP_BASE) == 0)
 	{
 #ifdef INC_MODE
@@ -478,9 +523,11 @@ void bl2_plat_preload_setup(void)
 		else
 #endif
 		{
+			NOTICE("TRACE: plat_check_header FAILED, about to panic()\n");
 			panic();
 		}
 	}
+	NOTICE("TRACE: after plat_check_header while-loop\n");
 #endif
 
 #if defined(IMAGE_BL23) && defined(TCSUPPORT_EMMC)
@@ -501,9 +548,15 @@ void bl2_plat_preload_setup(void)
 void bl2_platform_setup(void)
 {
 #if !defined(IMAGE_BL21) && !defined(IMAGE_BL22)
+	NOTICE("TRACE: before hw_trap_init (2nd call)\n");
 	hw_trap_init();
+	NOTICE("TRACE: after hw_trap_init (2nd call)\n");
+	NOTICE("TRACE: before flash_init\n");
 	flash_init(&hw_trap);
+	NOTICE("TRACE: after flash_init\n");
+	NOTICE("TRACE: before plat_ecnt_io_setup\n");
 	plat_ecnt_io_setup(&hw_trap);
+	NOTICE("TRACE: after plat_ecnt_io_setup\n");
 #endif
 }
 #if !defined(IMAGE_BL21) && !defined(IMAGE_BL22)
