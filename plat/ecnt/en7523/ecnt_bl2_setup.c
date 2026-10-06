@@ -503,6 +503,19 @@ void bl2_plat_preload_setup(void)
 		{
 			if (flash_read(fip_offset, PLAT_ECNT_FIP_MAX_SIZE, (uint8_t *) PLAT_ECNT_FIP_BASE) == FLASH_READ_STATUS_CORRECT)
 			{
+				/*
+				 * Normal (non-recovery) boot from flash just succeeded.
+				 * hw_trap_init() can be forced into fw_upgrade_mode=1 on
+				 * every future boot by a stale DBG_FWU_MODE left in
+				 * EN7523_SCREG_WF0 (with EN7523_SCREG_WF1 == DEBUG_MAGIC),
+				 * regardless of the real GPIO0 strap -- these scratch
+				 * registers survive a software/watchdog reset and only
+				 * clear on a full power cycle. Clear them now so a
+				 * subsequent soft reset re-checks the real strap instead
+				 * of getting stuck back in recovery/XMODEM mode.
+				 */
+				mmio_write_32(EN7523_SCREG_WF0, 0);
+				mmio_write_32(EN7523_SCREG_WF1, 0);
 			}
 			else
 			{
