@@ -32,16 +32,8 @@ popd >/dev/null
 
 mkdir -p bin
 if [ ! -e bin/trx-airoha ]; then
-    echo
-    echo "WARNING: 'trx-airoha' utility is missed. Please find it and put with proper"
-    echo "  name to 'atf-airoha-build/bin' directory. The utility (and it sources) can"
-    echo "  be found in your Airoha SDK build directory. Sources are placed in"
-    echo
-    echo "    \${SDK}/tclinux_phoenix/tools/trx"
-    echo
-    echo "  directory. Binary file placed in"
-    echo
-    echo "    \${SDK}/openwrt-21.02/openwrt-21.02.1_dev/build_dir/target-aarch64_cortex-a53_musl/linux-airoha_\${SOC}/bootloader/tools/trx/trx"
+    make -C "${ATF_AIROHA_DIR}/tools/ecnt/trx" TCSUPPORT_OPENWRT=1 TCSUPPORT_LITTLE_ENDIAN=1 TCSUPPORT_BL2_OPTIMIZATION=1 clean all
+    cp "${ATF_AIROHA_DIR}/tools/ecnt/trx/trx" bin/trx-airoha
 fi
 
 if [ ! -e bin/lzma ]; then
