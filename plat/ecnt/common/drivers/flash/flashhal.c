@@ -97,30 +97,28 @@ FLASH_INIT_T flash_init(hw_trap_t *hw_trap)
 {
 	hwtrap = hw_trap;
 
-	/* TEST-ONLY (re-added): bl2_platform_setup() calls flash_init()
-	 * unconditionally, BEFORE bl2_plat_preload_setup() ever checks
-	 * hw_trap.fw_upgrade_mode -- so a hang in the real nand probe here
-	 * blocks the UART recovery path too, not just normal boot-from-flash.
-	 * Confirmed on hardware: real nandflash_init() hangs in this exact
-	 * boot scenario (SPI-NAND controller state after BL21->BL22->BL23
-	 * handoff isn't what the generic probe expects). Re-stubbing until
-	 * that's root-caused; the fw_upgrade_mode fix itself (real
-	 * HWTRAP_FW_UPGRADE strap, no longer force-set to 1) stays. */
-	NOTICE("TRACE: flash_init SKIPPED (test-only stub, real nand_probe hangs here)\n");
-	return FLASH_INIT_SUCCESS;
+	NOTICE("TRACE: flash_init entry\n");
+
 #if defined (TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_AN7583) || defined (TCSUPPORT_CPU_AN7552)
+	NOTICE("TRACE: IS_NANDFLASH-branch=EN7581/AN7583/AN7552, ecc_dev=%d ecc_ctrl=%d parallel=%d\n",
+		(int)hwtrap->is_spi_nand_device_ecc, (int)hwtrap->is_spi_nand_ctrl_ecc, (int)hwtrap->is_parallel_nand);
 	if (hwtrap->is_spi_nand_device_ecc ||
 		hwtrap->is_spi_nand_ctrl_ecc ||
 		hwtrap->is_parallel_nand) {
+		NOTICE("TRACE: before nandflash_init\n");
 		if (nandflash_init(0) != 0) {
 			return FLASH_INIT_FAIL;
 		}
 	}
 #else
+	NOTICE("TRACE: before IS_NANDFLASH check\n");
+	NOTICE("TRACE: IS_NANDFLASH=%d\n", (int)IS_NANDFLASH);
 	if (IS_NANDFLASH) {
+		NOTICE("TRACE: before nandflash_init\n");
  		if (nandflash_init(0) != 0) {
 			return FLASH_INIT_FAIL;
 		}
+		NOTICE("TRACE: after nandflash_init OK\n");
  	}
 #endif
 
@@ -144,7 +142,9 @@ FLASH_INIT_T flash_init(hw_trap_t *hw_trap)
 	} 
 #endif
 	else {
+		NOTICE("TRACE: before spi_nor_init\n");
 		spi_nor_init();
+		NOTICE("TRACE: after spi_nor_init\n");
 	}
 
 	return FLASH_INIT_SUCCESS;
@@ -156,13 +156,6 @@ FLASH_READ_STATUS_T flash_read(uint32_t from, uint32_t len, uint8_t *p_buf)
 	SPI_NAND_FLASH_RTN_T status = SPI_NAND_FLASH_RTN_NO_ERROR;
 	int read_status = 0;
 
-	/* TEST-ONLY (re-added): flash_init() is stubbed again (see above),
-	 * so the SPI-NAND controller was never actually initialized here.
-	 * Report "no valid image" so callers fall through to the recovery
-	 * path untouched. */
-	(void)from; (void)len; (void)p_buf; (void)retlen; (void)status; (void)read_status;
-	NOTICE("TRACE: flash_read SKIPPED (test-only stub)\n");
-	return FLASH_READ_STATUS_INCORRECT;
 #if defined (TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_AN7583) || defined (TCSUPPORT_CPU_AN7552)
 	if (hwtrap->is_spi_nand_device_ecc ||
 		hwtrap->is_spi_nand_ctrl_ecc ||

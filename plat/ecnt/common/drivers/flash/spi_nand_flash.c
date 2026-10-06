@@ -4604,11 +4604,14 @@ static SPI_NAND_FLASH_RTN_T spi_nand_probe( struct SPI_NAND_FLASH_INFO_T *ptr_rt
 	_SPI_NAND_DEBUG_PRINTF(SPI_NAND_FLASH_DEBUG_LEVEL_1, "spi_nand_probe: start \n");
 
 	/* Protocol for read id */
-	_SPI_NAND_SEMAPHORE_LOCK();	
+	NOTICE("TRACE: before spi_nand_protocol_read_id\n");
+	_SPI_NAND_SEMAPHORE_LOCK();
 	spi_nand_protocol_read_id(ptr_rtn_device_t );
-	_SPI_NAND_SEMAPHORE_UNLOCK();	
+	_SPI_NAND_SEMAPHORE_UNLOCK();
+	NOTICE("TRACE: after spi_nand_protocol_read_id\n");
 
 	rtn_status = scan_spi_nand_table(ptr_rtn_device_t);
+	NOTICE("TRACE: after scan_spi_nand_table, rtn_status=%d\n", rtn_status);
 
 	if ( rtn_status != SPI_NAND_FLASH_RTN_NO_ERROR )
 	{
@@ -5087,7 +5090,9 @@ SPI_NAND_FLASH_RTN_T SPI_NAND_Flash_Init(u32 rom_base)
 #endif
 
 	memset(&spi_nfi_conf_t,0,sizeof(SPI_NFI_CONF_T));
+	NOTICE("TRACE: before nand_probe_init\n");
 	ret = nand_probe_init();
+	NOTICE("TRACE: after nand_probe_init, ret=%d\n", ret);
 	if(ret) {
 		_SPI_NAND_PRINTF("nand_probe_init fail.\n");
 		return ret;
@@ -5096,17 +5101,24 @@ SPI_NAND_FLASH_RTN_T SPI_NAND_Flash_Init(u32 rom_base)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if(!_parallel_nand_mode) {
 		/* set spi controller clock */
+		NOTICE("TRACE: before set_spi_clock\n");
 		set_spi_clock();
+		NOTICE("TRACE: after set_spi_clock\n");
 	}
 #endif
 
 	/* 2. Enable Manual Mode */
-	_SPI_NAND_ENABLE_MANUAL_MODE();	
+	NOTICE("TRACE: before _SPI_NAND_ENABLE_MANUAL_MODE\n");
+	_SPI_NAND_ENABLE_MANUAL_MODE();
+	NOTICE("TRACE: after _SPI_NAND_ENABLE_MANUAL_MODE\n");
 
  	/* 3. Probe flash information */
+	NOTICE("TRACE: before nand_probe\n");
 	if ( nand_probe(&_current_flash_info_t) != SPI_NAND_FLASH_RTN_NO_ERROR ) {
+		NOTICE("TRACE: after nand_probe, FAILED\n");
 		_SPI_NAND_PRINTF("SPI NAND Flash Detected Error !\n");
 	} else {
+		NOTICE("TRACE: after nand_probe, OK\n");
 		debug_config();
 		ret = spi_buf_init();
 		if(ret) {

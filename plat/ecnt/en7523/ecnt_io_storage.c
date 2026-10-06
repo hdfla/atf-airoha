@@ -311,8 +311,44 @@ static const struct plat_io_policy *policies[] = {
 static int check_ubi(const uintptr_t spec)
 {
 	int result;
+	uintptr_t local_image_handle;
+	size_t image_size;
 
+	/*
+	 * Neither io_dev_init() (ubi_dev_funcs has no .dev_init, so it's
+	 * always a NOP returning 0) nor io_open() (ubi_volume_open() just
+	 * stashes the spec and unconditionally returns 0) actually look the
+	 * volume up by name. That only happens in ubi_volume_size(), invoked
+	 * through io_size(), which runs ubispl_init_scan() +
+	 * ubispl_get_volume_data_size() and is the first place a missing
+	 * "fip" volume is detected. Probe that explicitly instead of trusting
+	 * io_open()'s always-success result.
+	 */
 	result = io_dev_init(ubi_dev_handle, (uintptr_t)NULL);
+	if (result == 0) {
+		result = io_open(ubi_dev_handle, spec, &local_image_handle);
+		if (result == 0) {
+			result = io_size(local_image_handle, &image_size);
+			io_close(local_image_handle);
+		}
+	}
+
+	if (result != 0) {
+		/*
+		 * No "fip" UBI volume found (e.g. the "ubi" partition hasn't
+		 * been formatted/written as UBI yet). The BL31+U-Boot FIP may
+		 * still be present as a plain image at a fixed flash offset
+		 * (PLAT_ECNT_FIP_OFFSET) -- ecnt_bl2_setup.c's
+		 * plat_get_dual_boot() already read and validated such a FIP
+		 * header into PLAT_ECNT_FIP_BASE right before this policy is
+		 * consulted. Fall back to reading it from there instead of
+		 * failing the whole image load.
+		 */
+		NOTICE("TRACE: UBI 'fip' volume not found, falling back to raw FIP at 0x%x\n",
+		       PLAT_ECNT_FIP_OFFSET);
+		policies[FIP_IMAGE_ID] = &fip_memmap_policy;
+		result = open_memmap(fip_memmap_policy.image_spec);
+	}
 
 	return result;
 }
@@ -515,6 +551,15 @@ int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
 	result = policy->check(policy->image_spec);
 	if (result == 0)
 	{
+		/*
+		 * check() may have switched policies[image_id] to a fallback
+		 * (e.g. FIP_IMAGE_ID's check_ubi() falling back to
+		 * fip_memmap_policy when no "fip" UBI volume is found) --
+		 * re-read it so the handle/spec returned below match the
+		 * policy that actually succeeded.
+		 */
+		policy = policies[image_id];
+
 		if ((image_id == BL2_IMAGE_ID) || (image_id == BL31_IMAGE_ID) || (image_id == BL33_IMAGE_ID)) {
 			INFO("FW UN-ENCRYPTION\n");
 		}
