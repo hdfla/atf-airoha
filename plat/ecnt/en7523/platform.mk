@@ -74,6 +74,14 @@ endif
 else
 SOC_SUB_DIR				:= en7523
 EFUSE_DRIVER			:= efuse.c
+# TCSUPPORT_CPU_EN7523 is only ever tested with Make-level ifeq (which
+# governs BL2_SOURCES), never forwarded to the C preprocessor -- so
+# every "#if defined(TCSUPPORT_CPU_EN7523)" in the platform C sources
+# (e.g. ecnt_system.c) was always false, and in ecnt_system_init() that
+# leaves a dangling "else" with no matching "if", a hard compile error
+# whenever this file is actually built (which TCSUPPORT_BL2_OPTIMIZATION=1
+# + IMAGE_BL22/BL23 does).
+$(eval $(call add_define,TCSUPPORT_CPU_EN7523))
 endif
 
 ECNT_PLAT				:=	plat/ecnt
