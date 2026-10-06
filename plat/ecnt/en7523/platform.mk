@@ -261,29 +261,25 @@ ifeq ($(TCSUPPORT_CPU_AN7583),1)
 				${ECNT_PLAT}/common/drivers/avs/${SOC_SUB_DIR}/ecnt_avs.c
 endif
 else
+	# EN7523's ddr_cal source uses a different, simpler file set than
+	# AN7581/AN7583 (dramc_pi_main.c/dramc_pi_basic_api.c/
+	# dramc_pi_calibration_api.c/hal_io.c/dramc.c, not the
+	# Hal_io.c/IPM_actiming_setting_*.c/ANA_init_config.c-style files
+	# above, which don't exist under ddr_cal/en7523/). This branch
+	# previously referenced those nonexistent filenames, so compiling
+	# EN7523's IMAGE_BL22 with TCSUPPORT_BL2_OPTIMIZATION set always
+	# fell through to the prebuilt blobs in
+	# plat/ecnt/blobs/en7523/bl22/ (see build_macros.mk) instead of
+	# ever compiling this source. Fixed to reference the real files so
+	# the reconstructed (and now corrected) source is actually used.
 	BL2_SOURCES			+= ${ECNT_PLAT}/common/drivers/efuse/$(EFUSE_DRIVER)			\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc.c \
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/IPM_actiming_setting_DDR4.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/RX_path_auto_gen.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/TX_path_auto_gen.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/TX_RX_auto_gen_library.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_actiming.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/MD32_initial.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_dv_dut.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_utility.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_pi_basic_api.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_pi_calibration_api.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_dvfs.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_pi_main.c	\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/IPM_actiming_setting_DDR3.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/Hal_io.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/HW_FUNC_MANAGE.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/DRAMC_SUBSYS_config.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/DIG_SHUF_config.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/DIG_NONSHUF_config.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/DDR4_dram_init.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/DDR3_dram_init.c		\
-				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/ANA_init_config.c		\	
+				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/hal_io.c			\
+				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_pi_basic_api.c			\
+				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_pi_calibration_api.c			\
+				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc_pi_main.c			\
+				${ECNT_PLAT}/common/drivers/ddr_cal/${SOC_SUB_DIR}/dramc.c				\
+				${ECNT_PLAT_SOC}/ecnt_avs.c							\
+				${ECNT_PLAT_SOC}/ecnt_scu_phy.c						\
 				${ECNT_PLAT}/common/drivers/efuse_load/${SOC_SUB_DIR}/efuse_load.c
 ifeq ($(TCSUPPORT_CPU_EN7581),1) # TODO handle TCSUPPORT_CPU_AN7583
 	BL2_SOURCES			+= ${ECNT_PLAT}/common/drivers/serdes/an7581/serdes_config.c
@@ -939,6 +935,45 @@ ENABLE_SVE_FOR_NS			:=	0
 
 ECNT_SIP_KERNEL_BOOT_ENABLE := 1
 $(eval $(call add_define,ECNT_SIP_KERNEL_BOOT_ENABLE))
+
+# Several BL2_SOURCES branches above (added under
+# TCSUPPORT_BL2_OPTIMIZATION=1, i.e. the build-en7523.sh flow) copy-pasted
+# AN7581/AN7583's ddr_cal file list -- Hal_io.c, IPM_actiming_setting_*.c,
+# ANA_init_config.c, etc. -- none of which exist under
+# plat/ecnt/common/drivers/ddr_cal/en7523/. For en7523 those references
+# always failed to compile in practice, so the build only ever worked via
+# the prebuilt object blobs copied over in build_macros.mk
+# (plat/ecnt/blobs/en7523/bl2*/*.o), never the real source. Strip the
+# bogus paths and add the real ones (deduplicated by $(sort ...), so this
+# is a no-op for branches that already reference the correct files).
+ifeq ($(SOC_SUB_DIR),en7523)
+BL2_SOURCES := $(filter-out \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/Hal_io.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/IPM_actiming_setting_DDR3.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/IPM_actiming_setting_DDR4.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/RX_path_auto_gen.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/TX_path_auto_gen.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/TX_RX_auto_gen_library.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_actiming.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/MD32_initial.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_dv_dut.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_utility.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_dvfs.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/HW_FUNC_MANAGE.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/DRAMC_SUBSYS_config.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/DIG_SHUF_config.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/DIG_NONSHUF_config.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/DDR4_dram_init.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/DDR3_dram_init.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/ANA_init_config.c \
+	, $(BL2_SOURCES))
+BL2_SOURCES += ${ECNT_PLAT}/common/drivers/ddr_cal/en7523/hal_io.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_pi_basic_api.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_pi_calibration_api.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc_pi_main.c \
+	${ECNT_PLAT}/common/drivers/ddr_cal/en7523/dramc.c
+BL2_SOURCES := $(sort $(BL2_SOURCES))
+endif
 
 PLAT_XLAT_TABLES_DYNAMIC := 1
 $(eval $(call add_define,PLAT_XLAT_TABLES_DYNAMIC))

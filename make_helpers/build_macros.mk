@@ -600,13 +600,15 @@ ifneq ($(TCSUPPORT_CPU_EN7581)$(TCSUPPORT_CPU_AN7583)$(TCSUPPORT_CPU_AN7552),)
 	-cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/dramtest.o $(BUILD_DIR)/ ;
 	-cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/ecnt_avs.o $(BUILD_DIR)/ ;
 else
-	# en7523
+	# en7523: dramc*.o/hal_io.o used to be copied from the prebuilt
+	# vendor blob here, overwriting whatever BL2_SOURCES had just
+	# compiled right before the link step. Now that platform.mk
+	# correctly compiles plat/ecnt/common/drivers/ddr_cal/en7523/*.c
+	# into these same object names, copying the blob back in would
+	# silently discard that source (and any fixes to it) at link time.
+	# The efuse blob is unrelated (calibration data, not ddr_cal code)
+	# and is still copied.
 	cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/efuse* $(BUILD_DIR)/ ;
-	cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/hal_io.o $(BUILD_DIR)/ ;
-	cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/dramc_pi_basic_api.o $(BUILD_DIR)/ ;
-	cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/dramc_pi_calibration_api.o $(BUILD_DIR)/ ;
-	cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/dramc_pi_main.o $(BUILD_DIR)/ ;
-	cp -rf $(ECNT_PLAT)/blobs/$(SOC_SUB_DIR)/bl22/dramc.o $(BUILD_DIR)/ ;
 endif
 endif
 ifeq ($(IMAGE_BL23),1)
