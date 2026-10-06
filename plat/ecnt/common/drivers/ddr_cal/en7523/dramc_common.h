@@ -98,7 +98,7 @@ extern U32 u4DRAMdebugLOgEnable2;
 #define prom_print_hex(_x_, _y_) printf("%x",_x_)
 #define BGA 3	//YMC add for EN7523 pkg type
 #endif
-#define dbg_print 0	//YMC add for BU debug print
+#define dbg_print 1	//YMC add for BU debug print
 
 extern int dump_log;
 #endif   // _DRAMC_COMMON_H_

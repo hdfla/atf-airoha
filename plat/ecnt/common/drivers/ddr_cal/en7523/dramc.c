@@ -71,7 +71,7 @@ unsigned int dramc_main(void)
 {
 	U32 val;
 
-	printf("\r\nEN7523DRAMC V0.1\r\n");
+	printf("\r\nEN7523 DRAMC opensource - v0.1\r\n");
 
 	writel(1, 0x1fb00040);
 	writel(0, 0x1fb00040);
