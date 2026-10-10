@@ -1557,6 +1557,7 @@ const struct SPI_NAND_FLASH_INFO_T spi_nand_flash_tables[] = {
 #endif
 		extend_dev_id:				_SPI_NAND_DUMMY_EXTEND_DEVICE_ID,
 	},
+#endif
 
 	{
 		mfr_id: 					_SPI_NAND_MANUFACTURER_ID_HEYANG,
@@ -1607,7 +1608,6 @@ const struct SPI_NAND_FLASH_INFO_T spi_nand_flash_tables[] = {
 #endif
 		extend_dev_id:				_SPI_NAND_DUMMY_EXTEND_DEVICE_ID,
 	},
-#endif
 
 #if !defined(TCSUPPORT_AUTOBENCH)
 #if 0
